@@ -1,28 +1,43 @@
 import argparse
 
-from .loader import load_platform_analytics
-from .resolver import resolve_object
-from .graph import traverse_lineage
-from .classifier import classify_lineage
-from .migration import build_migration_summary
-from .output import export_results
+from .loader import (
+    load_platform_analytics
+)
+
+from .resolver import (
+    resolve_object,
+    ObjectResolutionError,
+)
+
+from .graph import (
+    traverse_lineage
+)
+
+from .classifier import (
+    classify_lineage
+)
+
+from .migration import (
+    build_migration_summary
+)
+
+from .output import (
+    export_results
+)
+
 from .diagnostics import (
     build_diagnostics,
     print_diagnostics,
+    STATUS_NEEDS_INPUT,
 )
 
 
-def detect_project(object_location):
+def detect_project(
+    object_location
+):
     """
-    Obtiene el nombre del proyecto desde Object Location.
-
-    Ejemplo:
-
-        /Operaciones/Objetos públicos/...
-
-    devuelve:
-
-        Operaciones
+    Obtiene el nombre del proyecto
+    desde Object Location.
     """
 
     if not object_location:
@@ -30,7 +45,10 @@ def detect_project(object_location):
 
     parts = [
         part
-        for part in object_location.split("/")
+        for part in (
+            object_location
+            .split("/")
+        )
         if part
     ]
 
@@ -40,20 +58,26 @@ def detect_project(object_location):
     return parts[0]
 
 
-def get_direct_components(classified_result):
+def get_direct_components(
+    classified_result
+):
     """
-    Obtiene únicamente los componentes directos
+    Obtiene los componentes directos
     del objeto inicial.
     """
 
-    start_object = classified_result.get(
-        "start_object",
-        {}
+    start_object = (
+        classified_result.get(
+            "start_object",
+            {}
+        )
     )
 
-    start_guid = start_object.get(
-        "guid",
-        ""
+    start_guid = (
+        start_object.get(
+            "guid",
+            ""
+        )
     )
 
     if not start_guid:
@@ -61,20 +85,30 @@ def get_direct_components(classified_result):
 
     return [
         edge
-        for edge in classified_result.get(
-            "edges",
-            []
+        for edge in (
+            classified_result.get(
+                "edges",
+                []
+            )
+            or []
         )
-        if edge.get("parent_guid") == start_guid
+        if (
+            edge.get(
+                "parent_guid"
+            )
+            == start_guid
+        )
     ]
 
 
 def print_separator():
     """
-    Imprime un separador visual.
+    Imprime separador visual.
     """
 
-    print("-" * 70)
+    print(
+        "-" * 70
+    )
 
 
 def print_object_summary(
@@ -82,29 +116,50 @@ def print_object_summary(
     direct_components
 ):
     """
-    Imprime el resumen general del objeto.
+    Imprime resumen del objeto.
     """
 
-    obj = classified_result.get(
-        "start_object",
-        {}
+    obj = (
+        classified_result.get(
+            "start_object",
+            {}
+        )
     )
 
-    project = detect_project(
-        obj.get("location", "")
+    project = (
+        detect_project(
+            obj.get(
+                "location",
+                ""
+            )
+        )
     )
 
     print()
-    print("=" * 70)
-    print("MICROSTRATEGY LINEAGE BOT")
-    print("=" * 70)
+
+    print(
+        "=" * 70
+    )
+
+    print(
+        "MICROSTRATEGY LINEAGE BOT"
+    )
+
+    print(
+        "=" * 70
+    )
 
     print()
-    print("RESUMEN DEL OBJETO")
+
+    print(
+        "RESUMEN DEL OBJETO"
+    )
+
     print_separator()
 
     print(
-        f"Proyecto             : {project}"
+        f"Proyecto             : "
+        f"{project}"
     )
 
     print(
@@ -142,47 +197,33 @@ def print_direct_components(
     direct_components
 ):
     """
-    Imprime los componentes directos
-    del objeto analizado.
+    Imprime componentes directos.
     """
 
     print()
-    print("COMPONENTES DIRECTOS")
+
+    print(
+        "COMPONENTES DIRECTOS"
+    )
+
     print_separator()
 
     if not direct_components:
+
         print(
-            "No se encontraron componentes directos."
+            "No se encontraron "
+            "componentes directos."
         )
+
         return
 
     for edge in direct_components:
 
-        child_level = edge.get(
-            "child_level",
-            "UNKNOWN"
-        )
-
-        child_type = edge.get(
-            "child_type",
-            ""
-        )
-
-        child_name = edge.get(
-            "child_name",
-            ""
-        )
-
-        child_guid = edge.get(
-            "child_guid",
-            ""
-        )
-
         print(
-            f"[{child_level}] "
-            f"{child_type} | "
-            f"{child_name} | "
-            f"{child_guid}"
+            f"[{edge.get('child_level', 'UNKNOWN')}] "
+            f"{edge.get('child_type', '')} | "
+            f"{edge.get('child_name', '')} | "
+            f"{edge.get('child_guid', '')}"
         )
 
 
@@ -190,23 +231,32 @@ def print_logical_tables(
     classified_result
 ):
     """
-    Imprime las Logical Tables únicas
-    detectadas en el lineage.
+    Imprime Logical Tables.
     """
 
-    logical_tables = classified_result.get(
-        "logical_tables",
-        []
-    ) or []
+    logical_tables = (
+        classified_result.get(
+            "logical_tables",
+            []
+        )
+        or []
+    )
 
     print()
-    print("LOGICAL TABLES")
+
+    print(
+        "LOGICAL TABLES"
+    )
+
     print_separator()
 
     if not logical_tables:
+
         print(
-            "No se encontraron Logical Tables."
+            "No se encontraron "
+            "Logical Tables."
         )
+
         return
 
     for table in logical_tables:
@@ -222,40 +272,55 @@ def print_physical_tables(
     migration_summary
 ):
     """
-    Imprime las tablas físicas y su
-    clasificación de migración.
+    Imprime Physical Tables.
     """
 
-    physical_tables = migration_summary.get(
-        "physical_tables",
-        []
-    ) or []
+    physical_tables = (
+        migration_summary.get(
+            "physical_tables",
+            []
+        )
+        or []
+    )
 
     print()
-    print("PHYSICAL TABLES")
+
+    print(
+        "PHYSICAL TABLES"
+    )
+
     print_separator()
 
     if not physical_tables:
+
         print(
-            "No se encontraron tablas físicas."
+            "No se encontraron "
+            "tablas físicas."
         )
+
         return
 
     for table in physical_tables:
 
-        migration_status = table.get(
-            "migration_status",
-            ""
+        migration_status = (
+            table.get(
+                "migration_status",
+                ""
+            )
         )
 
-        table_name = table.get(
-            "name",
-            ""
+        table_name = (
+            table.get(
+                "name",
+                ""
+            )
         )
 
-        table_guid = table.get(
-            "guid",
-            ""
+        table_guid = (
+            table.get(
+                "guid",
+                ""
+            )
         )
 
         print(
@@ -269,11 +334,15 @@ def print_aws_summary(
     migration_summary
 ):
     """
-    Imprime el scope final para migración AWS.
+    Imprime resumen AWS.
     """
 
     print()
-    print("AWS MIGRATION SUMMARY")
+
+    print(
+        "AWS MIGRATION SUMMARY"
+    )
+
     print_separator()
 
     print(
@@ -296,55 +365,75 @@ def print_aws_summary(
         f"{migration_summary.get('auxiliary_count', 0)}"
     )
 
-    migrate = migration_summary.get(
-        "migrate",
-        []
-    ) or []
+    migrate = (
+        migration_summary.get(
+            "migrate",
+            []
+        )
+        or []
+    )
 
-    validate_sql = migration_summary.get(
-        "validate_sql",
-        []
-    ) or []
+    validate_sql = (
+        migration_summary.get(
+            "validate_sql",
+            []
+        )
+        or []
+    )
 
-    auxiliary = migration_summary.get(
-        "auxiliary",
-        []
-    ) or []
+    auxiliary = (
+        migration_summary.get(
+            "auxiliary",
+            []
+        )
+        or []
+    )
 
     if migrate:
 
         print()
+
         print(
-            "TABLAS CONFIRMADAS PARA MIGRACIÓN"
+            "TABLAS CONFIRMADAS "
+            "PARA MIGRACIÓN"
         )
 
         for table in migrate:
+
             print(
-                f"- {table.get('name', '')}"
+                f"- "
+                f"{table.get('name', '')}"
             )
 
     if validate_sql:
 
         print()
+
         print(
-            "TABLAS QUE REQUIEREN VALIDACIÓN SQL"
+            "TABLAS QUE REQUIEREN "
+            "VALIDACIÓN SQL"
         )
 
         for table in validate_sql:
+
             print(
-                f"- {table.get('name', '')}"
+                f"- "
+                f"{table.get('name', '')}"
             )
 
     if auxiliary:
 
         print()
+
         print(
             "TABLAS AUXILIARES"
         )
 
         for table in auxiliary:
+
             print(
-                f"- {table.get('name', '')}"
+                f"- "
+                f"{table.get('name', '')}"
             )
 
 
@@ -352,12 +441,15 @@ def print_generated_files(
     generated_files
 ):
     """
-    Imprime las rutas de los archivos
-    generados por el análisis.
+    Imprime archivos generados.
     """
 
     print()
-    print("ARCHIVOS GENERADOS")
+
+    print(
+        "ARCHIVOS GENERADOS"
+    )
+
     print_separator()
 
     print(
@@ -381,66 +473,118 @@ def print_generated_files(
     )
 
 
+def print_needs_input(
+    error
+):
+    """
+    Muestra una condición funcional
+    que requiere información del usuario.
+
+    NO se considera error técnico.
+    """
+
+    print()
+
+    print(
+        "=" * 70
+    )
+
+    print(
+        "MICROSTRATEGY LINEAGE BOT"
+    )
+
+    print(
+        "=" * 70
+    )
+
+    print()
+
+    print(
+        "RESULTADO"
+    )
+
+    print_separator()
+
+    print(
+        f"Status : "
+        f"{STATUS_NEEDS_INPUT}"
+    )
+
+    print()
+
+    print(
+        str(error)
+    )
+
+    print()
+
+    print(
+        "El Robot terminó correctamente, "
+        "pero necesita información adicional "
+        "para continuar con el análisis."
+    )
+
+    print()
+
+    print(
+        "=" * 70
+    )
+
+
 def run_analysis(
     dataset_path,
     object_query,
     output_dir="outputs"
 ):
     """
-    Ejecuta el pipeline completo:
-
-        Dataset Platform Analytics
-                ↓
-        Resolver objeto
-                ↓
-        Recorrer grafo de dependencias
-                ↓
-        Clasificación N6-N1
-                ↓
-        Clasificación migración AWS
-                ↓
-        Diagnósticos
-                ↓
-        Exportación de resultados
+    Ejecuta el pipeline completo.
     """
 
-    # --------------------------------------------------
-    # 1. Cargar dataset
-    # --------------------------------------------------
+    # =====================================
+    # 1. CARGAR DATASET
+    # =====================================
 
-    rows = load_platform_analytics(
-        dataset_path
+    rows = (
+        load_platform_analytics(
+            dataset_path
+        )
     )
 
-    # --------------------------------------------------
-    # 2. Resolver objeto
-    # --------------------------------------------------
+    # =====================================
+    # 2. RESOLVER OBJETO
+    # =====================================
 
-    obj = resolve_object(
-        rows,
-        object_query
+    obj = (
+        resolve_object(
+            rows,
+            object_query
+        )
     )
 
-    # --------------------------------------------------
-    # 3. Recorrer lineage
-    # --------------------------------------------------
+    # =====================================
+    # 3. RECORRER LINEAGE
+    # =====================================
 
-    lineage = traverse_lineage(
-        rows,
-        obj["guid"]
+    lineage = (
+        traverse_lineage(
+            rows,
+            obj["guid"]
+        )
     )
 
-    # --------------------------------------------------
-    # 4. Clasificación arquitectónica N6-N1
-    # --------------------------------------------------
+    # =====================================
+    # 4. CLASIFICAR N6-N1
+    # =====================================
 
-    classified = classify_lineage(
-        lineage
+    classified = (
+        classify_lineage(
+            lineage
+        )
     )
 
-    # --------------------------------------------------
-    # 5. Clasificación de migración AWS
-    # --------------------------------------------------
+    # =====================================
+    # 5. MIGRACIÓN AWS
+    # =====================================
 
     migration_summary = (
         build_migration_summary(
@@ -448,18 +592,20 @@ def run_analysis(
         )
     )
 
-    # --------------------------------------------------
-    # 6. Diagnóstico funcional
-    # --------------------------------------------------
+    # =====================================
+    # 6. DIAGNÓSTICOS
+    # =====================================
 
-    diagnostics = build_diagnostics(
-        classified,
-        migration_summary
+    diagnostics = (
+        build_diagnostics(
+            classified,
+            migration_summary
+        )
     )
 
-    # --------------------------------------------------
-    # 7. Componentes directos
-    # --------------------------------------------------
+    # =====================================
+    # 7. COMPONENTES DIRECTOS
+    # =====================================
 
     direct_components = (
         get_direct_components(
@@ -467,9 +613,9 @@ def run_analysis(
         )
     )
 
-    # --------------------------------------------------
-    # 8. Mostrar resultados
-    # --------------------------------------------------
+    # =====================================
+    # 8. MOSTRAR RESULTADOS
+    # =====================================
 
     print_object_summary(
         classified,
@@ -492,22 +638,24 @@ def run_analysis(
         migration_summary
     )
 
-    # --------------------------------------------------
-    # 9. Mostrar diagnósticos
-    # --------------------------------------------------
+    # =====================================
+    # 9. DIAGNÓSTICOS
+    # =====================================
 
     print_diagnostics(
         diagnostics
     )
 
-    # --------------------------------------------------
-    # 10. Exportar archivos
-    # --------------------------------------------------
+    # =====================================
+    # 10. EXPORTAR
+    # =====================================
 
-    generated_files = export_results(
-        classified,
-        migration_summary,
-        output_dir=output_dir
+    generated_files = (
+        export_results(
+            classified,
+            migration_summary,
+            output_dir=output_dir
+        )
     )
 
     print_generated_files(
@@ -515,11 +663,10 @@ def run_analysis(
     )
 
     print()
-    print("=" * 70)
 
-    # --------------------------------------------------
-    # 11. Retornar resultado completo
-    # --------------------------------------------------
+    print(
+        "=" * 70
+    )
 
     return {
         "classified_result":
@@ -541,10 +688,12 @@ def main():
     Punto de entrada del Robot.
     """
 
-    parser = argparse.ArgumentParser(
-        description=(
-            "Robot de lineage para "
-            "MicroStrategy Platform Analytics"
+    parser = (
+        argparse.ArgumentParser(
+            description=(
+                "Robot de lineage para "
+                "MicroStrategy Platform Analytics"
+            )
         )
     )
 
@@ -571,11 +720,13 @@ def main():
         default="outputs",
         help=(
             "Directorio donde se guardarán "
-            "los resultados del análisis."
+            "los resultados."
         ),
     )
 
-    args = parser.parse_args()
+    args = (
+        parser.parse_args()
+    )
 
     try:
 
@@ -585,10 +736,36 @@ def main():
             output_dir=args.output_dir
         )
 
+    # =====================================
+    # CONDICIONES FUNCIONALES
+    # =====================================
+
+    except ObjectResolutionError as error:
+
+        print_needs_input(
+            error
+        )
+
+        # IMPORTANTE:
+        #
+        # No usamos SystemExit(1).
+        #
+        # GitHub Actions termina
+        # correctamente.
+        return
+
+    # =====================================
+    # ERRORES TÉCNICOS REALES
+    # =====================================
+
     except Exception as error:
 
         print()
-        print("ERROR")
+
+        print(
+            "ERROR TÉCNICO"
+        )
+
         print_separator()
 
         print(
