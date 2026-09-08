@@ -10,7 +10,7 @@ on:
         options:
           - Operaciones
           - Sistemas y Operaciones
-          - CID
+          - CIB
           - Datamart Auditoria
           - Banca Comercial
 
@@ -54,9 +54,9 @@ jobs:
               echo "path=data/Analisis de objetos_Sistemas y Operaciones.csv" >> "$GITHUB_OUTPUT"
               ;;
 
-            "CID")
-              echo "path=data/Analisis de objetos_CID.csv" >> "$GITHUB_OUTPUT"
-              ;;
+            "CIB")
+            echo "path=data/Analisis de objetos_CIB.csv" >> "$GITHUB_OUTPUT"
+            ;;
 
             "Datamart Auditoria")
               echo "path=data/Analisis de objetos_Datamart Auditoria.csv" >> "$GITHUB_OUTPUT"
