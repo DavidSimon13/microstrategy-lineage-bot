@@ -1,0 +1,138 @@
+# Clasificación arquitectónica de objetos MicroStrategy
+# Proyecto: MicroStrategy Lineage Bot
+
+levels:
+
+  N6:
+    name: "Presentación / Consumo"
+    types:
+      - Dashboard
+      - Document
+
+  N5:
+    name: "Ejecución / Dataset"
+    types:
+      - Grid Report
+      - Graph Report
+      - Grid and Graph Report
+      - SQL Report
+      - OLAP Cube
+      - Data Import Cube
+      - Managed Grid Report
+      - Managed Data Import Cube
+      - Transaction Services Report
+
+  N4:
+    name: "Lógica Analítica"
+    types:
+      - Metric
+      - Managed Metric
+      - Filter
+      - User Filter
+      - Custom Group
+      - Consolidation
+      - Derived Element
+      - Managed Derived Element
+      - Metric Subtotal
+      - Attribute Element Prompt
+      - Object Prompt
+      - Value Prompt
+      - Prompt
+      - Template
+
+  N3:
+    name: "Modelo Semántico"
+    types:
+      - Attribute
+      - Managed Attribute
+      - Fact
+      - Transformation
+      - Attribute Transformation
+
+  N2:
+    name: "Mapeo Lógico"
+    types:
+      - Logical Table
+      - Partition Logical Table
+      - Managed Attribute Form
+      - Attribute Form Category
+      - Filter Partition
+
+  N1:
+    name: "Modelo Físico"
+    types:
+      - Database Table
+      - Managed Database Table
+      - Column
+      - Managed Column
+
+
+navigation:
+
+  identity_field: "Object GUID"
+
+  logical_table_types:
+    - Logical Table
+    - Partition Logical Table
+
+  physical_table_types:
+    - Database Table
+    - Managed Database Table
+
+  terminal_types:
+    - Column
+    - Managed Column
+    - Managed Attribute Form
+    - Attribute Form Category
+
+  navigable_types:
+    - Dashboard
+    - Document
+    - Grid Report
+    - Graph Report
+    - Grid and Graph Report
+    - SQL Report
+    - OLAP Cube
+    - Data Import Cube
+    - Managed Grid Report
+    - Managed Data Import Cube
+    - Transaction Services Report
+    - Metric
+    - Managed Metric
+    - Filter
+    - User Filter
+    - Custom Group
+    - Consolidation
+    - Derived Element
+    - Managed Derived Element
+    - Metric Subtotal
+    - Attribute Element Prompt
+    - Object Prompt
+    - Value Prompt
+    - Prompt
+    - Template
+    - Attribute
+    - Managed Attribute
+    - Fact
+    - Logical Table
+    - Partition Logical Table
+    - Database Table
+    - Managed Database Table
+
+
+migration_status:
+
+  MIGRATE:
+    description: "Tabla física confirmada como parte del consumo efectivo."
+
+  VALIDATE_SQL:
+    description: "Dependencia física indirecta que requiere validar el SQL real."
+
+  AUXILIARY:
+    description: "Dependencia técnica o auxiliar."
+
+  NOT_PHYSICAL:
+    description: "Objeto de metadata que no representa una tabla física."
+
+  TERMINAL_COLUMN:
+    description: "Columna utilizada únicamente como validación técnica."
