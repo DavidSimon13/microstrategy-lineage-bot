@@ -1,1 +1,1 @@
-# microstrategy-lineage-bot_Diana
+# microstrategy-lineage-bot
