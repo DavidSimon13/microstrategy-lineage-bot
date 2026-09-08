@@ -87,23 +87,35 @@ def print_object_summary(
     print(
         f"Proyecto             : {project}"
     )
+
     print(
-        f"Object Name          : {obj.get('name', '')}"
+        f"Object Name          : "
+        f"{obj.get('name', '')}"
     )
+
     print(
-        f"Object GUID          : {obj.get('guid', '')}"
+        f"Object GUID          : "
+        f"{obj.get('guid', '')}"
     )
+
     print(
-        f"Object Type          : {obj.get('type', '')}"
+        f"Object Type          : "
+        f"{obj.get('type', '')}"
     )
+
     print(
-        f"Nivel                : {obj.get('level', '')}"
+        f"Nivel                : "
+        f"{obj.get('level', '')}"
     )
+
     print(
-        f"Object Location      : {obj.get('location', '')}"
+        f"Object Location      : "
+        f"{obj.get('location', '')}"
     )
+
     print(
-        f"Componentes directos : {len(direct_components)}"
+        f"Componentes directos : "
+        f"{len(direct_components)}"
     )
 
 
@@ -260,72 +272,30 @@ def print_aws_summary(
                 f"- {table.get('name', '')}"
             )
 
+    auxiliary = migration_summary.get(
+        "auxiliary", []
+    )
 
-def run_analysis(
-    dataset_path,
-    object_query,
-    output_dir="outputs"
+    if auxiliary:
+
+        print()
+        print(
+            "TABLAS AUXILIARES"
+        )
+
+        for table in auxiliary:
+
+            print(
+                f"- {table.get('name', '')}"
+            )
+
+
+def print_generated_files(
+    generated_files
 ):
     """
-    Ejecuta el pipeline completo.
+    Imprime las rutas de los archivos generados.
     """
-
-    rows = load_platform_analytics(
-        dataset_path
-    )
-
-    obj = resolve_object(
-        rows,
-        object_query
-    )
-
-    lineage = traverse_lineage(
-        rows,
-        obj["guid"]
-    )
-
-    classified = classify_lineage(
-        lineage
-    )
-
-    migration_summary = (
-        build_migration_summary(
-            classified
-        )
-    )
-
-    direct_components = (
-        get_direct_components(
-            classified
-        )
-    )
-
-    print_object_summary(
-        classified,
-        direct_components
-    )
-
-    print_direct_components(
-        direct_components
-    )
-
-    print_logical_tables(
-        classified
-    )
-
-    print_physical_tables(
-        migration_summary
-    )
-
-    print_aws_summary(
-        migration_summary
-    )
-
-        generated_files = export_results(
-        classified,
-        migration_summary,
-        output_dir=output_dir
-    )
 
     print()
     print("ARCHIVOS GENERADOS")
@@ -351,8 +321,129 @@ def run_analysis(
         f"{generated_files['lineage_edges_csv']}"
     )
 
+
+def run_analysis(
+    dataset_path,
+    object_query,
+    output_dir="outputs"
+):
+    """
+    Ejecuta el pipeline completo:
+
+        CSV
+        -> Resolver objeto
+        -> Recorrer lineage
+        -> Clasificar N6-N1
+        -> Clasificar migración
+        -> Exportar resultados
+    """
+
+    # ---------------------------------
+    # 1. Cargar dataset
+    # ---------------------------------
+
+    rows = load_platform_analytics(
+        dataset_path
+    )
+
+    # ---------------------------------
+    # 2. Resolver objeto
+    # ---------------------------------
+
+    obj = resolve_object(
+        rows,
+        object_query
+    )
+
+    # ---------------------------------
+    # 3. Recorrer lineage
+    # ---------------------------------
+
+    lineage = traverse_lineage(
+        rows,
+        obj["guid"]
+    )
+
+    # ---------------------------------
+    # 4. Clasificación arquitectónica
+    # ---------------------------------
+
+    classified = classify_lineage(
+        lineage
+    )
+
+    # ---------------------------------
+    # 5. Clasificación migración AWS
+    # ---------------------------------
+
+    migration_summary = (
+        build_migration_summary(
+            classified
+        )
+    )
+
+    # ---------------------------------
+    # 6. Componentes directos
+    # ---------------------------------
+
+    direct_components = (
+        get_direct_components(
+            classified
+        )
+    )
+
+    # ---------------------------------
+    # 7. Mostrar resultado
+    # ---------------------------------
+
+    print_object_summary(
+        classified,
+        direct_components
+    )
+
+    print_direct_components(
+        direct_components
+    )
+
+    print_logical_tables(
+        classified
+    )
+
+    print_physical_tables(
+        migration_summary
+    )
+
+    print_aws_summary(
+        migration_summary
+    )
+
+    # ---------------------------------
+    # 8. Exportar archivos
+    # ---------------------------------
+
+    generated_files = export_results(
+        classified,
+        migration_summary,
+        output_dir=output_dir
+    )
+
+    print_generated_files(
+        generated_files
+    )
+
     print()
     print("=" * 70)
+
+    return {
+        "classified_result":
+            classified,
+
+        "migration_summary":
+            migration_summary,
+
+        "generated_files":
+            generated_files,
+    }
 
 
 def main():
@@ -385,13 +476,23 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--output-dir",
+        default="outputs",
+        help=(
+            "Directorio donde se guardarán "
+            "los resultados del análisis."
+        ),
+    )
+
     args = parser.parse_args()
 
     try:
 
         run_analysis(
             dataset_path=args.data,
-            object_query=args.object
+            object_query=args.object,
+            output_dir=args.output_dir
         )
 
     except Exception as error:
