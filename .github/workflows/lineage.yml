@@ -10,6 +10,9 @@ on:
         options:
           - Operaciones
           - Sistemas y Operaciones
+          - CID
+          - Datamart Auditoria
+          - Banca Comercial
 
       object_query:
         description: "Nombre exacto o GUID del objeto MicroStrategy"
@@ -51,6 +54,18 @@ jobs:
               echo "path=data/Analisis de objetos_Sistemas y Operaciones.csv" >> "$GITHUB_OUTPUT"
               ;;
 
+            "CID")
+              echo "path=data/Analisis de objetos_CID.csv" >> "$GITHUB_OUTPUT"
+              ;;
+
+            "Datamart Auditoria")
+              echo "path=data/Analisis de objetos_Datamart Auditoria.csv" >> "$GITHUB_OUTPUT"
+              ;;
+
+            "Banca Comercial")
+              echo "path=data/Analisis de objetos_Banca Comercial.csv" >> "$GITHUB_OUTPUT"
+              ;;
+
             *)
               echo "Dataset no soportado: $DATASET_NAME"
               exit 1
@@ -69,3 +84,11 @@ jobs:
           python -m src.microstrategy_lineage.cli \
             --data "$DATASET_PATH" \
             --object "$OBJECT_QUERY"
+
+      - name: Publicar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: microstrategy-lineage-results
+          path: outputs/
+          if-no-files-found: ignore
