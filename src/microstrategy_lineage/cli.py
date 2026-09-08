@@ -5,6 +5,7 @@ from .resolver import resolve_object
 from .graph import traverse_lineage
 from .classifier import classify_lineage
 from .migration import build_migration_summary
+from .output import export_results
 
 
 def detect_project(object_location):
@@ -262,7 +263,8 @@ def print_aws_summary(
 
 def run_analysis(
     dataset_path,
-    object_query
+    object_query,
+    output_dir="outputs"
 ):
     """
     Ejecuta el pipeline completo.
@@ -317,6 +319,36 @@ def run_analysis(
 
     print_aws_summary(
         migration_summary
+    )
+
+        generated_files = export_results(
+        classified,
+        migration_summary,
+        output_dir=output_dir
+    )
+
+    print()
+    print("ARCHIVOS GENERADOS")
+    print_separator()
+
+    print(
+        f"Directorio         : "
+        f"{generated_files['report_dir']}"
+    )
+
+    print(
+        f"Resumen JSON       : "
+        f"{generated_files['json']}"
+    )
+
+    print(
+        f"Physical Tables CSV: "
+        f"{generated_files['physical_tables_csv']}"
+    )
+
+    print(
+        f"Lineage Edges CSV  : "
+        f"{generated_files['lineage_edges_csv']}"
     )
 
     print()
