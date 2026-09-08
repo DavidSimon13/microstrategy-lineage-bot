@@ -6,6 +6,10 @@ from .graph import traverse_lineage
 from .classifier import classify_lineage
 from .migration import build_migration_summary
 from .output import export_results
+from .diagnostics import (
+    build_diagnostics,
+    print_diagnostics,
+)
 
 
 def detect_project(object_location):
@@ -36,26 +40,40 @@ def detect_project(object_location):
     return parts[0]
 
 
-def get_direct_components(lineage_result):
+def get_direct_components(classified_result):
     """
     Obtiene únicamente los componentes directos
     del objeto inicial.
     """
 
-    start_guid = lineage_result[
-        "start_object"
-    ]["guid"]
+    start_object = classified_result.get(
+        "start_object",
+        {}
+    )
+
+    start_guid = start_object.get(
+        "guid",
+        ""
+    )
+
+    if not start_guid:
+        return []
 
     return [
         edge
-        for edge in lineage_result.get(
-            "edges", []
+        for edge in classified_result.get(
+            "edges",
+            []
         )
         if edge.get("parent_guid") == start_guid
     ]
 
 
 def print_separator():
+    """
+    Imprime un separador visual.
+    """
+
     print("-" * 70)
 
 
@@ -67,9 +85,10 @@ def print_object_summary(
     Imprime el resumen general del objeto.
     """
 
-    obj = classified_result[
-        "start_object"
-    ]
+    obj = classified_result.get(
+        "start_object",
+        {}
+    )
 
     project = detect_project(
         obj.get("location", "")
@@ -123,7 +142,8 @@ def print_direct_components(
     direct_components
 ):
     """
-    Imprime los componentes directos.
+    Imprime los componentes directos
+    del objeto analizado.
     """
 
     print()
@@ -138,11 +158,31 @@ def print_direct_components(
 
     for edge in direct_components:
 
+        child_level = edge.get(
+            "child_level",
+            "UNKNOWN"
+        )
+
+        child_type = edge.get(
+            "child_type",
+            ""
+        )
+
+        child_name = edge.get(
+            "child_name",
+            ""
+        )
+
+        child_guid = edge.get(
+            "child_guid",
+            ""
+        )
+
         print(
-            f"[{edge.get('child_level', 'UNKNOWN')}] "
-            f"{edge.get('child_type', '')} | "
-            f"{edge.get('child_name', '')} | "
-            f"{edge.get('child_guid', '')}"
+            f"[{child_level}] "
+            f"{child_type} | "
+            f"{child_name} | "
+            f"{child_guid}"
         )
 
 
@@ -150,12 +190,14 @@ def print_logical_tables(
     classified_result
 ):
     """
-    Imprime las Logical Tables únicas.
+    Imprime las Logical Tables únicas
+    detectadas en el lineage.
     """
 
     logical_tables = classified_result.get(
-        "logical_tables", []
-    )
+        "logical_tables",
+        []
+    ) or []
 
     print()
     print("LOGICAL TABLES")
@@ -185,8 +227,9 @@ def print_physical_tables(
     """
 
     physical_tables = migration_summary.get(
-        "physical_tables", []
-    )
+        "physical_tables",
+        []
+    ) or []
 
     print()
     print("PHYSICAL TABLES")
@@ -200,10 +243,25 @@ def print_physical_tables(
 
     for table in physical_tables:
 
+        migration_status = table.get(
+            "migration_status",
+            ""
+        )
+
+        table_name = table.get(
+            "name",
+            ""
+        )
+
+        table_guid = table.get(
+            "guid",
+            ""
+        )
+
         print(
-            f"{table.get('migration_status', ''):15} "
-            f"| {table.get('name', '')} "
-            f"| {table.get('guid', '')}"
+            f"{migration_status:15} "
+            f"| {table_name} "
+            f"| {table_guid}"
         )
 
 
@@ -211,7 +269,7 @@ def print_aws_summary(
     migration_summary
 ):
     """
-    Imprime el scope final AWS.
+    Imprime el scope final para migración AWS.
     """
 
     print()
@@ -239,8 +297,19 @@ def print_aws_summary(
     )
 
     migrate = migration_summary.get(
-        "migrate", []
-    )
+        "migrate",
+        []
+    ) or []
+
+    validate_sql = migration_summary.get(
+        "validate_sql",
+        []
+    ) or []
+
+    auxiliary = migration_summary.get(
+        "auxiliary",
+        []
+    ) or []
 
     if migrate:
 
@@ -250,14 +319,9 @@ def print_aws_summary(
         )
 
         for table in migrate:
-
             print(
                 f"- {table.get('name', '')}"
             )
-
-    validate_sql = migration_summary.get(
-        "validate_sql", []
-    )
 
     if validate_sql:
 
@@ -267,14 +331,9 @@ def print_aws_summary(
         )
 
         for table in validate_sql:
-
             print(
                 f"- {table.get('name', '')}"
             )
-
-    auxiliary = migration_summary.get(
-        "auxiliary", []
-    )
 
     if auxiliary:
 
@@ -284,7 +343,6 @@ def print_aws_summary(
         )
 
         for table in auxiliary:
-
             print(
                 f"- {table.get('name', '')}"
             )
@@ -294,7 +352,8 @@ def print_generated_files(
     generated_files
 ):
     """
-    Imprime las rutas de los archivos generados.
+    Imprime las rutas de los archivos
+    generados por el análisis.
     """
 
     print()
@@ -302,23 +361,23 @@ def print_generated_files(
     print_separator()
 
     print(
-        f"Directorio         : "
-        f"{generated_files['report_dir']}"
+        "Directorio         : "
+        f"{generated_files.get('report_dir', '')}"
     )
 
     print(
-        f"Resumen JSON       : "
-        f"{generated_files['json']}"
+        "Resumen JSON       : "
+        f"{generated_files.get('json', '')}"
     )
 
     print(
-        f"Physical Tables CSV: "
-        f"{generated_files['physical_tables_csv']}"
+        "Physical Tables CSV: "
+        f"{generated_files.get('physical_tables_csv', '')}"
     )
 
     print(
-        f"Lineage Edges CSV  : "
-        f"{generated_files['lineage_edges_csv']}"
+        "Lineage Edges CSV  : "
+        f"{generated_files.get('lineage_edges_csv', '')}"
     )
 
 
@@ -330,51 +389,58 @@ def run_analysis(
     """
     Ejecuta el pipeline completo:
 
-        CSV
-        -> Resolver objeto
-        -> Recorrer lineage
-        -> Clasificar N6-N1
-        -> Clasificar migración
-        -> Exportar resultados
+        Dataset Platform Analytics
+                ↓
+        Resolver objeto
+                ↓
+        Recorrer grafo de dependencias
+                ↓
+        Clasificación N6-N1
+                ↓
+        Clasificación migración AWS
+                ↓
+        Diagnósticos
+                ↓
+        Exportación de resultados
     """
 
-    # ---------------------------------
+    # --------------------------------------------------
     # 1. Cargar dataset
-    # ---------------------------------
+    # --------------------------------------------------
 
     rows = load_platform_analytics(
         dataset_path
     )
 
-    # ---------------------------------
+    # --------------------------------------------------
     # 2. Resolver objeto
-    # ---------------------------------
+    # --------------------------------------------------
 
     obj = resolve_object(
         rows,
         object_query
     )
 
-    # ---------------------------------
+    # --------------------------------------------------
     # 3. Recorrer lineage
-    # ---------------------------------
+    # --------------------------------------------------
 
     lineage = traverse_lineage(
         rows,
         obj["guid"]
     )
 
-    # ---------------------------------
-    # 4. Clasificación arquitectónica
-    # ---------------------------------
+    # --------------------------------------------------
+    # 4. Clasificación arquitectónica N6-N1
+    # --------------------------------------------------
 
     classified = classify_lineage(
         lineage
     )
 
-    # ---------------------------------
-    # 5. Clasificación migración AWS
-    # ---------------------------------
+    # --------------------------------------------------
+    # 5. Clasificación de migración AWS
+    # --------------------------------------------------
 
     migration_summary = (
         build_migration_summary(
@@ -382,9 +448,18 @@ def run_analysis(
         )
     )
 
-    # ---------------------------------
-    # 6. Componentes directos
-    # ---------------------------------
+    # --------------------------------------------------
+    # 6. Diagnóstico funcional
+    # --------------------------------------------------
+
+    diagnostics = build_diagnostics(
+        classified,
+        migration_summary
+    )
+
+    # --------------------------------------------------
+    # 7. Componentes directos
+    # --------------------------------------------------
 
     direct_components = (
         get_direct_components(
@@ -392,9 +467,9 @@ def run_analysis(
         )
     )
 
-    # ---------------------------------
-    # 7. Mostrar resultado
-    # ---------------------------------
+    # --------------------------------------------------
+    # 8. Mostrar resultados
+    # --------------------------------------------------
 
     print_object_summary(
         classified,
@@ -417,9 +492,17 @@ def run_analysis(
         migration_summary
     )
 
-    # ---------------------------------
-    # 8. Exportar archivos
-    # ---------------------------------
+    # --------------------------------------------------
+    # 9. Mostrar diagnósticos
+    # --------------------------------------------------
+
+    print_diagnostics(
+        diagnostics
+    )
+
+    # --------------------------------------------------
+    # 10. Exportar archivos
+    # --------------------------------------------------
 
     generated_files = export_results(
         classified,
@@ -434,12 +517,19 @@ def run_analysis(
     print()
     print("=" * 70)
 
+    # --------------------------------------------------
+    # 11. Retornar resultado completo
+    # --------------------------------------------------
+
     return {
         "classified_result":
             classified,
 
         "migration_summary":
             migration_summary,
+
+        "diagnostics":
+            diagnostics,
 
         "generated_files":
             generated_files,
@@ -448,7 +538,7 @@ def run_analysis(
 
 def main():
     """
-    Punto de entrada del robot.
+    Punto de entrada del Robot.
     """
 
     parser = argparse.ArgumentParser(
@@ -500,7 +590,11 @@ def main():
         print()
         print("ERROR")
         print_separator()
-        print(str(error))
+
+        print(
+            str(error)
+        )
+
         print()
 
         raise SystemExit(1)
