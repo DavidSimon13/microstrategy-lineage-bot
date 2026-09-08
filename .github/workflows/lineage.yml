@@ -3,6 +3,14 @@ name: MicroStrategy Lineage Bot
 on:
   workflow_dispatch:
     inputs:
+      dataset:
+        description: "Proyecto / dataset de Platform Analytics"
+        required: true
+        type: choice
+        options:
+          - Operaciones
+          - Sistemas y Operaciones
+
       object_query:
         description: "Nombre exacto o GUID del objeto MicroStrategy"
         required: true
@@ -15,10 +23,10 @@ jobs:
 
     steps:
       - name: Descargar repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configurar Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -27,11 +35,37 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Seleccionar dataset
+        id: dataset
+        shell: bash
+        env:
+          DATASET_NAME: ${{ inputs.dataset }}
+        run: |
+          case "$DATASET_NAME" in
+
+            "Operaciones")
+              echo "path=data/Analisis de objetos_Operaciones.csv" >> "$GITHUB_OUTPUT"
+              ;;
+
+            "Sistemas y Operaciones")
+              echo "path=data/Analisis de objetos_Sistemas y Operaciones.csv" >> "$GITHUB_OUTPUT"
+              ;;
+
+            *)
+              echo "Dataset no soportado: $DATASET_NAME"
+              exit 1
+              ;;
+
+          esac
+
       - name: Ejecutar MicroStrategy Lineage Bot
         env:
           OBJECT_QUERY: ${{ inputs.object_query }}
-          DATASET_PATH: "data/Analisis de objetos_Operaciones.csv"
+          DATASET_PATH: ${{ steps.dataset.outputs.path }}
         run: |
+          echo "Dataset seleccionado: $DATASET_PATH"
+          echo "Objeto solicitado: $OBJECT_QUERY"
+
           python -m src.microstrategy_lineage.cli \
             --data "$DATASET_PATH" \
             --object "$OBJECT_QUERY"
