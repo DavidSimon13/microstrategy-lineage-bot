@@ -48,10 +48,9 @@ CHATGPT_URL = (
     "6aa065e7-6ba8-8016-8fca-a76a5a4e65e8"
 )
 
-GEMINI_DIANA_URL = (
+GEMINI_MAYA_URL = (
     "https://gemini.google.com/gem/"
-    "1YjYZugs7wzG-9JBFy0U1YyoaL8kRJpl1"
-    "?usp=sharing"
+    "1uUnE0tCXInojHDAqsPX889scRJ-e_Eqw?usp=sharing"
 )
 
 
