@@ -39,7 +39,7 @@ APP_SUBTITLE = (
 )
 
 LOGO_PATH = Path(
-    "assets/Maya.jpeg"
+    "assets/Maya.jpg"
 )
 
 
