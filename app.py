@@ -32,14 +32,14 @@ from src.microstrategy_lineage.diagnostics import (
 # CONFIGURACION GENERAL
 # ============================================================
 
-APP_NAME = "Lina MQ"
+APP_NAME = "Maya"
 
 APP_SUBTITLE = (
     "Linaje y Mapeo de Activos para la Migracion BI"
 )
 
 LOGO_PATH = Path(
-    "assets/lina.jpeg"
+    "assets/Maya.jpeg"
 )
 
 
