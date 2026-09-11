@@ -813,6 +813,17 @@ elif page == "Analisis":
     or []
 )
 
+physical_tables = []
+
+result = st.session_state.last_result
+
+if result:
+    migration = result.get("migration", {})
+    physical_tables = (
+        migration.get("physical_tables", [])
+        or []
+    )
+
 if physical_tables:
 
     st.markdown(
