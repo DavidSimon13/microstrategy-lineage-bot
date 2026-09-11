@@ -50,7 +50,8 @@ CHATGPT_URL = (
 
 GEMINI_MAYA_URL = (
     "https://gemini.google.com/gem/"
-    "1uUnE0tCXInojHDAqsPX889scRJ-e_Eqw?usp=sharing"
+    "1uUnE0tCXInojHDAqsPX889scRJ-e_Eqw"
+    "?usp=sharing"
 )
 
 
@@ -1216,6 +1217,6 @@ st.sidebar.link_button(
 
 st.sidebar.link_button(
     "💎 Abrir Maya",
-    GEMINI_Maya_URL,
+    GEMINI_MAYA_URL,
     use_container_width=True,
 )
