@@ -1044,7 +1044,7 @@ st.sidebar.link_button(
 )
 
 st.sidebar.link_button(
-    "💎 Abrir Diana",
-    GEMINI_DIANA_URL,
+    "💎 Abrir Maya",
+    GEMINI_Maya_URL,
     use_container_width=True,
 )
