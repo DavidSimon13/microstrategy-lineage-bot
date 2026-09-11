@@ -805,26 +805,197 @@ elif page == "Analisis":
         )
 
         physical_tables = (
-            migration.get(
-                "physical_tables",
-                []
-            )
-            or []
+    migration.get(
+        "physical_tables",
+        []
+    )
+    or []
+)
+
+if physical_tables:
+
+    st.markdown(
+        "### 🗄️ Tablas fisicas"
+    )
+
+    # Mostrar tabla en pantalla
+    st.dataframe(
+        physical_tables,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    # --------------------------------------------------------
+    # EXPORTACIONES CSV
+    # --------------------------------------------------------
+
+    try:
+        import pandas as pd
+
+        # Convertir resultados a DataFrame
+        export_df = pd.DataFrame(
+            physical_tables
         )
 
-        if physical_tables:
+        # Si el motor devuelve nombres diferentes,
+        # conservamos la información disponible.
+        export_df = export_df.copy()
 
-            st.markdown(
-                "### 🗄️ Tablas fisicas"
+        # ----------------------------------------------------
+        # CSV COMPLETO
+        # ----------------------------------------------------
+
+        csv_all = export_df.to_csv(
+            index=False,
+            encoding="utf-8-sig"
+        )
+
+        # ----------------------------------------------------
+        # CSV MIGRATE
+        # ----------------------------------------------------
+
+        if "Estado" in export_df.columns:
+
+            migrate_df = export_df[
+                export_df["Estado"]
+                .astype(str)
+                .str.upper()
+                .eq("MIGRATE")
+            ].copy()
+
+        elif "status" in export_df.columns:
+
+            migrate_df = export_df[
+                export_df["status"]
+                .astype(str)
+                .str.upper()
+                .eq("MIGRATE")
+            ].copy()
+
+        else:
+
+            migrate_df = pd.DataFrame(
+                columns=export_df.columns
             )
 
-            st.dataframe(
-                physical_tables,
+        csv_migrate = migrate_df.to_csv(
+            index=False,
+            encoding="utf-8-sig"
+        )
+
+        # ----------------------------------------------------
+        # CSV VALIDATE_SQL
+        # ----------------------------------------------------
+
+        if "Estado" in export_df.columns:
+
+            validate_df = export_df[
+                export_df["Estado"]
+                .astype(str)
+                .str.upper()
+                .eq("VALIDATE_SQL")
+            ].copy()
+
+        elif "status" in export_df.columns:
+
+            validate_df = export_df[
+                export_df["status"]
+                .astype(str)
+                .str.upper()
+                .eq("VALIDATE_SQL")
+            ].copy()
+
+        else:
+
+            validate_df = pd.DataFrame(
+                columns=export_df.columns
+            )
+
+        csv_validate = validate_df.to_csv(
+            index=False,
+            encoding="utf-8-sig"
+        )
+
+        # ----------------------------------------------------
+        # NOMBRE DEL OBJETO
+        # ----------------------------------------------------
+
+        object_name = (
+            st.session_state.last_query
+            or "objeto"
+        )
+
+        safe_object_name = (
+            str(object_name)
+            .strip()
+            .replace(" ", "_")
+            .replace("/", "_")
+            .replace("\\", "_")
+            .replace(":", "_")
+        )
+
+        # ----------------------------------------------------
+        # BOTONES
+        # ----------------------------------------------------
+
+        st.markdown(
+            "### 📥 Descargar resultados"
+        )
+
+        d1, d2, d3 = st.columns(3)
+
+        with d1:
+
+            st.download_button(
+                label="📥 CSV completo",
+                data=csv_all,
+                file_name=(
+                    f"Maya_"
+                    f"{safe_object_name}_"
+                    f"physical_tables.csv"
+                ),
+                mime="text/csv",
                 use_container_width=True,
-                hide_index=True,
             )
 
+        with d2:
 
+            st.download_button(
+                label="📥 CSV MIGRATE",
+                data=csv_migrate,
+                file_name=(
+                    f"Maya_"
+                    f"{safe_object_name}_"
+                    f"MIGRATE.csv"
+                ),
+                mime="text/csv",
+                use_container_width=True,
+            )
+
+        with d3:
+
+            st.download_button(
+                label="📥 CSV VALIDATE_SQL",
+                data=csv_validate,
+                file_name=(
+                    f"Maya_"
+                    f"{safe_object_name}_"
+                    f"VALIDATE_SQL.csv"
+                ),
+                mime="text/csv",
+                use_container_width=True,
+            )
+
+    except Exception as export_error:
+
+        st.warning(
+            "No fue posible generar "
+            "los archivos CSV."
+        )
+
+        st.caption(
+            f"Detalle: {export_error}"
+        )
 # ============================================================
 # PAGINA LINEAGE
 # ============================================================
