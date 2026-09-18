@@ -38,11 +38,20 @@ GEMINI_MAYA_URL = "https://gemini.google.com/gem/1uUnE0tCXInojHDAqsPX889scRJ-e_E
 # ============================================================
 
 DATASETS = {
+    # --- Archivos ORIGINALES (.csv) ---
     "Operaciones": Path("data/Analisis de objetos_Operaciones.csv"),
     "Sistemas y Operaciones": Path("data/Analisis de objetos_Sistemas y Operaciones.csv"),
     "CIB": Path("data/Analisis de objetos_CIB.csv"),
     "Datamart Auditoria": Path("data/Analisis de objetos_Datamart Auditoria.csv"),
-    "Banca Comercial": Path("data/Analisis de objetos_Banca Comercial.csv"),
+    "Banca Comercial": Path("data/Analisis de objetos_Banca Comercial.csv"), 
+    
+    # --- Archivos NUEVOS COMPRIMIDOS (.zip) ---
+    "Reporte Regulatorios 2": Path("data/Analisisdeobjetos_reporteregulatorios2.zip"),
+    "Modelo BBVA": Path("data/Analisisdeobjetos_modeloBBVA.zip"),
+    
+    # --- Archivos NUEVOS (.csv) ---
+    "IES 2": Path("data/Analisis de objetos - IES2.csv"),
+    "Pricing": Path("data/Analisis de objetos - Pricing.csv"),
 }
 
 # ============================================================
