@@ -81,4 +81,11 @@ def load_platform_analytics(file_path):
     df = df.loc[:, [c for c in df.columns if str(c).strip().lower() not in ('', 'nan')]]
     df = df.fillna("")
 
+    # --- NUEVAS LÍNEAS PARA LIMPIAR ESPACIOS INVISIBLES ---
+    cols_to_clean = ['Object Name', 'Object GUID', 'Component Object Name', 'Component Object GUID']
+    for c in cols_to_clean:
+        if c in df.columns:
+            df[c] = df[c].astype(str).str.strip()
+    # ------------------------------------------------------
+
     return df.to_dict(orient="records")
