@@ -1,155 +1,69 @@
-import csv
-from pathlib import Path
-
-
-REQUIRED_COLUMNS = {
-    "Object Name",
-    "Object GUID",
-    "Object Location",
-    "Object Type DESC",
-    "Component Object Name",
-    "Component Object GUID",
-    "Component Object Type DESC",
-}
-
-
-def detect_encoding(file_path):
-    """
-    Detecta las codificaciones más habituales
-    en exportaciones de Platform Analytics.
-
-    UTF-16 LE comienza normalmente con:
-        FF FE
-
-    UTF-16 BE comienza normalmente con:
-        FE FF
-
-    En cualquier otro caso intentamos UTF-8
-    con soporte para BOM.
-    """
-
-    with file_path.open("rb") as binary_file:
-        first_bytes = binary_file.read(4)
-
-    if first_bytes.startswith(b"\xff\xfe"):
-        return "utf-16"
-
-    if first_bytes.startswith(b"\xfe\xff"):
-        return "utf-16"
-
-    return "utf-8-sig"
-
+import pandas as pd
+import zipfile
+import io
 
 def load_platform_analytics(file_path):
-    """
-    Carga un dataset CSV exportado desde
-    Platform Analytics.
+    path_str = str(file_path)
+    df = None
+    
+    # Lista de codificaciones y separadores comunes en exportaciones de MicroStrategy
+    encodings = ['utf-8', 'utf-16', 'latin1', 'cp1252']
+    separators = [',', '\t', ';']
+    
+    def try_read(file_obj):
+        for enc in encodings:
+            for sep in separators:
+                try:
+                    # Si es un objeto en memoria (BytesIO), regresar el puntero al inicio
+                    if hasattr(file_obj, 'seek'):
+                        file_obj.seek(0)
+                    
+                    # Intentamos leer ignorando líneas corruptas
+                    temp_df = pd.read_csv(file_obj, encoding=enc, sep=sep, on_bad_lines='skip')
+                    
+                    # Si detecta más de 3 columnas, significa que leyó correctamente el formato
+                    if len(temp_df.columns) > 3: 
+                        return temp_df
+                except Exception:
+                    continue
+        return None
 
-    Retorna:
-        list[dict]:
-            relaciones Object -> Component Object
-    """
+    # Detectar si es un archivo ZIP o un CSV normal
+    if path_str.endswith('.zip'):
+        with zipfile.ZipFile(path_str, 'r') as z:
+            csv_filename = z.namelist()[0]
+            with z.open(csv_filename) as f:
+                # Cargamos el contenido en memoria para poder reintentar leerlo varias veces
+                content = f.read()
+                df = try_read(io.BytesIO(content))
+    else:
+        df = try_read(path_str)
 
-    file_path = Path(file_path)
+    if df is None:
+        raise ValueError(f"No se pudo procesar el archivo {path_str}. Verifica su formato.")
 
-    if not file_path.exists():
-        raise FileNotFoundError(
-            f"No se encontró el archivo: {file_path}"
-        )
+    # ---------------------------------------------------------
+    # LIMPIEZA AUTOMÁTICA DE FORMATOS RAROS
+    # ---------------------------------------------------------
+    
+    # 1. Detectar y arreglar cabeceras movidas (Caso "Modelo BBVA")
+    # Buscamos 'Object Name' limpio de comillas
+    current_cols = [str(c).strip().replace('"', '') for c in df.columns]
+    
+    if 'Object Name' not in current_cols:
+        for i in range(min(10, len(df))):
+            row_vals = [str(val).strip().replace('"', '') for val in df.iloc[i].values]
+            if 'Object Name' in row_vals:
+                df.columns = df.iloc[i]
+                df = df.iloc[i+1:].reset_index(drop=True)
+                break
 
-    encoding = detect_encoding(file_path)
+    # 2. Limpiar nombres de columnas (quitar comillas, espacios, etc.)
+    df.columns = [str(c).strip().replace('"', '') for c in df.columns]
 
-    print(
-        f"Dataset encoding detectado: {encoding}"
-    )
+    # 3. Eliminar columnas "basura" o sin nombre
+    df = df.loc[:, ~df.columns.isna()]
+    df = df.loc[:, [c for c in df.columns if str(c).strip().lower() not in ('', 'nan')]]
 
-    rows = []
-
-    with file_path.open(
-        mode="r",
-        encoding=encoding,
-        newline=""
-    ) as csv_file:
-
-        reader = csv.DictReader(csv_file)
-
-        if reader.fieldnames is None:
-            raise ValueError(
-                "El archivo CSV no contiene encabezados."
-            )
-
-        available_columns = {
-            column.strip()
-            for column in reader.fieldnames
-            if column
-        }
-
-        missing_columns = (
-            REQUIRED_COLUMNS
-            - available_columns
-        )
-
-        if missing_columns:
-            raise ValueError(
-                "Faltan columnas obligatorias: "
-                + ", ".join(
-                    sorted(missing_columns)
-                )
-            )
-
-        for row in reader:
-
-            object_guid = (
-                row.get(
-                    "Object GUID", ""
-                ).strip()
-            )
-
-            component_guid = (
-                row.get(
-                    "Component Object GUID", ""
-                ).strip()
-            )
-
-            if not object_guid:
-                continue
-
-            rows.append({
-                "object_name":
-                    row.get(
-                        "Object Name", ""
-                    ).strip(),
-
-                "object_guid":
-                    object_guid,
-
-                "object_location":
-                    row.get(
-                        "Object Location", ""
-                    ).strip(),
-
-                "object_type":
-                    row.get(
-                        "Object Type DESC", ""
-                    ).strip(),
-
-                "component_name":
-                    row.get(
-                        "Component Object Name", ""
-                    ).strip(),
-
-                "component_guid":
-                    component_guid,
-
-                "component_type":
-                    row.get(
-                        "Component Object Type DESC",
-                        ""
-                    ).strip(),
-            })
-
-    print(
-        f"Relaciones cargadas: {len(rows)}"
-    )
-
-    return rows
+    # 4. Devolver los datos listos para Maya
+    return df.to_dict(orient="records")
