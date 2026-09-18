@@ -28,14 +28,14 @@ def load_platform_analytics(file_path):
                     continue
         return None
 
-   # Detectar si es un archivo ZIP o un CSV normal
+    # Detectar si es un archivo ZIP o un CSV normal
     if path_str.endswith('.zip'):
         with zipfile.ZipFile(path_str, 'r') as z:
-            # Buscar específicamente el archivo que termine en .csv dentro del ZIP
-            csv_files = [name for name in z.namelist() if name.lower().endswith('.csv')]
+            # Buscar específicamente archivos .csv e ignorar carpetas ocultas como __MACOSX
+            csv_files = [name for name in z.namelist() if name.lower().endswith('.csv') and '__MACOSX' not in name]
             
             if not csv_files:
-                raise ValueError(f"No se encontró ningún archivo .csv dentro del ZIP: {path_str}")
+                raise ValueError(f"No se encontró ningún archivo .csv válido dentro del ZIP: {path_str}")
                 
             csv_filename = csv_files[0] # Tomar el primer .csv real que encuentre
             
@@ -44,6 +44,9 @@ def load_platform_analytics(file_path):
                 df = try_read(io.BytesIO(content))
     else:
         df = try_read(path_str)
+
+    if df is None:
+        raise ValueError(f"No se pudo procesar el archivo {path_str}. Verifica su formato.")
 
     # ---------------------------------------------------------
     # LIMPIEZA AUTOMÁTICA DE FORMATOS RAROS
