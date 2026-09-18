@@ -116,6 +116,8 @@ st.markdown(
         font-weight: 700;
         margin-bottom: 10px;
     }
+    
+    /* Diseño general para los botones principales (pantalla central) */
     div.stButton > button {
         width: 100%;
         min-height: 44px;
@@ -130,6 +132,21 @@ st.markdown(
         border-color: #55BDFF;
         color: white;
     }
+
+    /* SOBREESCRIBIR: Diseño transparente solo para los botones del SIDEBAR */
+    section[data-testid="stSidebar"] div.stButton > button {
+        border: none !important;
+        background: transparent !important;
+        color: #A9C6DA !important;
+        justify-content: flex-start !important; /* Alinea el texto a la izquierda */
+        padding-left: 10px !important;
+        font-size: 16px !important;
+    }
+    section[data-testid="stSidebar"] div.stButton > button:hover {
+        color: #62C3FF !important; /* Brilla en azul claro al pasar el mouse */
+        background: rgba(255,255,255,0.05) !important;
+    }
+
     [data-testid="stLinkButton"] a {
         width: 100%;
         min-height: 44px;
@@ -207,19 +224,20 @@ with st.sidebar:
     st.caption("MicroStrategy Lineage")
     st.divider()
 
-    if st.button("Inicio"):
+    # Botones transparentes con ancho completo
+    if st.button("Inicio", use_container_width=True):
         navigate("Inicio")
 
-    if st.button("Analisis"):
+    if st.button("Analisis", use_container_width=True):
         navigate("Analisis")
 
-    if st.button("Lineage"):
+    if st.button("Lineage", use_container_width=True):
         navigate("Lineage")
 
-    if st.button("Migracion AWS"):
+    if st.button("Migracion AWS", use_container_width=True):
         navigate("Migracion")
 
-    if st.button("Historial"):
+    if st.button("Historial", use_container_width=True):
         navigate("Historial")
 
     st.divider()
