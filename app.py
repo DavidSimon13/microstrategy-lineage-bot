@@ -31,7 +31,6 @@ APP_SUBTITLE = "Linaje y Mapeo de Activos para la Migracion BI"
 LOGO_PATH = Path("assets/Maya.jpg")
 
 CHATGPT_URL = "https://chatgpt.com/share/e/6aa065e7-6ba8-8016-8fca-a76a5a4e65e8"
-GEMINI_MAYA_URL = "https://gemini.google.com/gem/1uUnE0tCXInojHDAqsPX889scRJ-e_Eqw?usp=sharing"
 
 # ============================================================
 # DATASETS
@@ -147,12 +146,12 @@ st.markdown(
         border: none !important;
         background: transparent !important;
         color: #A9C6DA !important;
-        justify-content: flex-start !important; /* Alinea el texto a la izquierda */
+        justify-content: flex-start !important;
         padding-left: 10px !important;
         font-size: 16px !important;
     }
     section[data-testid="stSidebar"] div.stButton > button:hover {
-        color: #62C3FF !important; /* Brilla en azul claro al pasar el mouse */
+        color: #62C3FF !important;
         background: rgba(255,255,255,0.05) !important;
     }
 
@@ -233,21 +232,9 @@ with st.sidebar:
     st.caption("MicroStrategy Lineage")
     st.divider()
 
-    # Botones transparentes con ancho completo
+    # Único botón de navegación que queda
     if st.button("Inicio", use_container_width=True):
         navigate("Inicio")
-
-    if st.button("Analisis", use_container_width=True):
-        navigate("Analisis")
-
-    if st.button("Lineage", use_container_width=True):
-        navigate("Lineage")
-
-    if st.button("Migracion AWS", use_container_width=True):
-        navigate("Migracion")
-
-    if st.button("Historial", use_container_width=True):
-        navigate("Historial")
 
     st.divider()
     st.caption("Maya | Metadata & Lineage")
@@ -315,17 +302,17 @@ if page == "Inicio":
 
     a1, a2 = st.columns(2)
     with a1:
-        if st.button("🔎 Analizar un objeto", use_container_width=True):
+        if st.button("Analizar un objeto", use_container_width=True):
             navigate("Analisis")
             st.rerun()
-        if st.button("🧬 Ver ultimo lineage", use_container_width=True):
+        if st.button("Ver ultimo lineage", use_container_width=True):
             navigate("Lineage")
             st.rerun()
     with a2:
-        if st.button("☁️ Ver scope AWS", use_container_width=True):
+        if st.button("Ver scope AWS", use_container_width=True):
             navigate("Migracion")
             st.rerun()
-        if st.button("🕘 Ver historial", use_container_width=True):
+        if st.button("Ver historial", use_container_width=True):
             navigate("Historial")
             st.rerun()
 
@@ -339,7 +326,7 @@ elif page == "Analisis":
     project = st.selectbox("Proyecto", list(DATASETS.keys()))
     object_query = st.text_input("Nombre o GUID del objeto", placeholder="Ejemplo: TLP504 RASTREO")
 
-    if st.button("🚀 Ejecutar analisis", type="primary", use_container_width=True):
+    if st.button("Ejecutar analisis", type="primary", use_container_width=True):
         if not object_query.strip():
             st.warning("Debes introducir un nombre o GUID.")
         else:
@@ -403,27 +390,22 @@ elif page == "Analisis":
         if physical_tables:
             st.markdown("### 🗄️ Tablas fisicas")
 
-            # 1. Convertimos los resultados a un DataFrame de Pandas
             df_tables = pd.DataFrame(physical_tables)
 
-            # 2. Arreglamos la columna rebelde pasándola a texto legible
+            # ELIMINAR LA COLUMNA evidence_path PARA QUE NO SE MUESTRE
             if "evidence_path" in df_tables.columns:
-                df_tables["evidence_path"] = df_tables["evidence_path"].astype(str)
+                df_tables = df_tables.drop(columns=["evidence_path"])
 
-            # 3. Mostrar tabla corregida en pantalla
             st.dataframe(df_tables, use_container_width=True, hide_index=True)
 
             # --------------------------------------------------------
             # EXPORTACIONES CSV
             # --------------------------------------------------------
             try:
-                # Usar el DataFrame corregido para la exportación
                 export_df = df_tables.copy()
 
-                # CSV COMPLETO
                 csv_all = export_df.to_csv(index=False, encoding="utf-8-sig")
 
-                # CSV MIGRATE
                 if "Estado" in export_df.columns:
                     migrate_df = export_df[export_df["Estado"].astype(str).str.upper().eq("MIGRATE")].copy()
                 elif "status" in export_df.columns:
@@ -433,7 +415,6 @@ elif page == "Analisis":
 
                 csv_migrate = migrate_df.to_csv(index=False, encoding="utf-8-sig")
 
-                # CSV VALIDATE_SQL
                 if "Estado" in export_df.columns:
                     validate_df = export_df[export_df["Estado"].astype(str).str.upper().eq("VALIDATE_SQL")].copy()
                 elif "status" in export_df.columns:
@@ -451,7 +432,7 @@ elif page == "Analisis":
 
                 with d1:
                     st.download_button(
-                        label="📥 CSV completo",
+                        label="Descargar CSV completo",
                         data=csv_all,
                         file_name=f"Maya_{safe_object_name}_physical_tables.csv",
                         mime="text/csv",
@@ -459,7 +440,7 @@ elif page == "Analisis":
                     )
                 with d2:
                     st.download_button(
-                        label="📥 CSV MIGRATE",
+                        label="Descargar CSV MIGRATE",
                         data=csv_migrate,
                         file_name=f"Maya_{safe_object_name}_MIGRATE.csv",
                         mime="text/csv",
@@ -467,7 +448,7 @@ elif page == "Analisis":
                     )
                 with d3:
                     st.download_button(
-                        label="📥 CSV VALIDATE_SQL",
+                        label="Descargar CSV VALIDATE_SQL",
                         data=csv_validate,
                         file_name=f"Maya_{safe_object_name}_VALIDATE_SQL.csv",
                         mime="text/csv",
@@ -524,10 +505,11 @@ elif page == "Migracion":
         if physical_tables:
             st.markdown("### Tablas")
             
-            # También aplicamos la corrección aquí para la vista de migración
             df_migration = pd.DataFrame(physical_tables)
+            
+            # ELIMINAR LA COLUMNA evidence_path AQUÍ TAMBIÉN
             if "evidence_path" in df_migration.columns:
-                df_migration["evidence_path"] = df_migration["evidence_path"].astype(str)
+                df_migration = df_migration.drop(columns=["evidence_path"])
                 
             st.dataframe(df_migration, use_container_width=True, hide_index=True)
 
@@ -565,6 +547,5 @@ elif page == "Historial":
 # ============================================================
 
 st.sidebar.divider()
-st.sidebar.markdown("### ⚡ Accesos rapidos")
-st.sidebar.link_button("💬 Abrir ChatGPT", CHATGPT_URL, use_container_width=True)
-st.sidebar.link_button("💎 Abrir Maya", GEMINI_MAYA_URL, use_container_width=True)
+st.sidebar.markdown("### Accesos rapidos")
+st.sidebar.link_button("Abrir ChatGPT", CHATGPT_URL, use_container_width=True)
