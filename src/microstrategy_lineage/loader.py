@@ -63,7 +63,7 @@ def load_platform_analytics(file_path):
 
     current_cols = [clean_col(c) for c in df.columns]
     
-    # Alinear cabeceras si la tabla viene movida (Como el Modelo BBVA[cite: 3])
+    # Alinear cabeceras si la tabla viene movida (Como el Modelo BBVA)
     if 'Object Name' not in current_cols:
         for i in range(min(10, len(df))):
             row_vals = [clean_col(val) for val in df.iloc[i].values]
