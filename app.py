@@ -37,20 +37,13 @@ CHATGPT_URL = "https://chatgpt.com/share/e/6aa065e7-6ba8-8016-8fca-a76a5a4e65e8"
 # ============================================================
 
 DATASETS = {
-    # --- Archivos ORIGINALES (.csv) ---
     "Operaciones": Path("data/Analisis de objetos_Operaciones.csv"),
     "Sistemas y Operaciones": Path("data/Analisis de objetos_Sistemas y Operaciones.csv"),
     "CIB": Path("data/Analisis de objetos_CIB.csv"),
     "Datamart Auditoria": Path("data/Analisis de objetos_Datamart Auditoria.csv"),
     "Banca Comercial": Path("data/Analisis de objetos_Banca Comercial.csv"), 
-    
-    # --- Archivos NUEVOS COMPRIMIDOS (.zip) ---
-    "Reporte Regulatorios 2": Path("data/Analisisdeobjetos_reporteregulatorios2.zip"),
-    "Modelo BBVA": Path("data/Analisisdeobjetos_modeloBBVA.zip"),
-    
-    # --- Archivos NUEVOS (.csv) ---
-    "IES 2": Path("data/Analisis de objetos - IES2.csv"),
-    "Pricing": Path("data/Analisis de objetos - Pricing.csv"),
+    "IES 2": Path("data/Analisis de objetos_IES2.csv"),
+    "Pricing": Path("data/Analisis de objetos_Pricing.csv"),
 }
 
 # ============================================================
@@ -188,7 +181,8 @@ st.markdown(
 # FUNCIONES
 # ============================================================
 
-@st.cache_data(show_spinner=False)
+# LA LÍNEA DE ABAJO ESTÁ COMENTADA PARA EVITAR EL BLOQUEO DE LA MEMORIA CACHÉ
+# @st.cache_data(show_spinner=False)
 def load_dataset(dataset_path):
     return load_platform_analytics(str(dataset_path))
 
