@@ -7,29 +7,25 @@ from src.microstrategy_lineage.classifier import classify_lineage
 from src.microstrategy_lineage.migration import build_migration_summary
 
 
-DATASET = (
-"data/Analisis de objetos_Sistemas y Operaciones.csv"
-)
+DATASET = "data/Analisis de objetos_Sistemas y Operaciones.csv"
 
-OBJECT_NAME = "TLP504 RASTREO"
+# Actualizado al nombre y GUID que validamos previamente
+OBJECT_NAME = "TLP509 RAESTREO RECON"
 
-EXPECTED_GUID = (
-    "FBD50FB44E1FD23305D8EB8E48C48FD3"
-)
+EXPECTED_GUID = "CBC58B2044FF5176F23BD4AB57791102"
 
 
-class TestSistemasOperacionesLineage(
-    unittest.TestCase
-):
+class TestSistemasOperacionesLineage(unittest.TestCase):
 
-    def test_tlp504_rastreo_public_object(self):
+    # Actualizamos el nombre de la función
+    def test_tlp509_rastreo_recon_public_object(self):
 
         rows = load_platform_analytics(
             DATASET
         )
 
         # ---------------------------------
-        # Resolver por nombre duplicado
+        # Resolver por nombre
         # ---------------------------------
 
         obj = resolve_object(
@@ -92,7 +88,7 @@ class TestSistemasOperacionesLineage(
         self.assertEqual(
             logical_names,
             {
-                "TLP504_FARASTREO(640)"
+                "TLP509_FARASTREO_RECON(270)"
             }
         )
 
@@ -123,7 +119,7 @@ class TestSistemasOperacionesLineage(
         self.assertEqual(
             migrate_names,
             {
-                "GORAPR.TLP504_FARASTREO"
+                "GORAPR.TLP509_FARASTREO_RECON"
             }
         )
 
