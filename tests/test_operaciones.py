@@ -9,7 +9,7 @@ from src.microstrategy_lineage.migration import build_migration_summary
 
 DATASET = "data/Analisis de objetos_Operaciones.csv"
 
-OBJECT_GUID = "1848424B4AFEF42F597C0481568A9131"
+OBJECT_GUID = "8F3A2B1C-4D5E-6F7A-8B9C-0D1E2F3A4B5C"
 
 
 class TestOperacionesLineage(unittest.TestCase):
