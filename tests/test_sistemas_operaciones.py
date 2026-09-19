@@ -8,7 +8,7 @@ from src.microstrategy_lineage.migration import build_migration_summary
 
 
 DATASET = (
-"data/Analisis de objetos_Sistemas y Operaciones.csv""
+"data/Analisis de objetos_Sistemas y Operaciones.csv"
 )
 
 OBJECT_NAME = "TLP504 RASTREO"
