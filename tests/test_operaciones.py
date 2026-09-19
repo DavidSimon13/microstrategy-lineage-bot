@@ -9,12 +9,14 @@ from src.microstrategy_lineage.migration import build_migration_summary
 
 DATASET = "data/Analisis de objetos_Operaciones.csv"
 
+# Este GUID corresponde a "RPT - Acumulado Diario"
 OBJECT_GUID = "B3DE139D4A1C28653B18FFA8DED6A6F2"
 
 
 class TestOperacionesLineage(unittest.TestCase):
 
-    def test_rpt_acumulado_mensual(self):
+    # Se cambia el nombre de la función para que coincida con el reporte real
+    def test_rpt_acumulado_diario(self):
 
         rows = load_platform_analytics(
             DATASET
@@ -25,9 +27,10 @@ class TestOperacionesLineage(unittest.TestCase):
             OBJECT_GUID
         )
 
+        # CORRECCIÓN: El nombre correcto esperado es "RPT - Acumulado Diario"
         self.assertEqual(
             obj["name"],
-            "RPT - Acumulado Mensual"
+            "RPT - Acumulado Diario"
         )
 
         lineage = traverse_lineage(
@@ -63,6 +66,8 @@ class TestOperacionesLineage(unittest.TestCase):
             2
         )
 
+        # Se asume que en classify_lineage y build_migration_summary 
+        # tienes la lógica para que los estados se llamen 'migrate' y 'validate_sql'
         migrate_names = {
             table["name"]
             for table in summary["migrate"]
