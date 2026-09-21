@@ -400,9 +400,8 @@ elif page == "Analisis":
 
             df_tables = pd.DataFrame(physical_tables)
 
-            # ELIMINAR LA COLUMNA evidence_path PARA QUE NO SE MUESTRE
-            if "evidence_path" in df_tables.columns:
-                df_tables = df_tables.drop(columns=["evidence_path"])
+            # ELIMINAR LAS COLUMNAS evidence_path Y reason PARA QUE NO SE MUESTREN
+            df_tables = df_tables.drop(columns=["evidence_path", "reason"], errors="ignore")
 
             st.dataframe(df_tables, use_container_width=True, hide_index=True)
 
@@ -485,7 +484,12 @@ elif page == "Lineage":
         st.metric("Relaciones detectadas", len(edges))
 
         if edges:
-            st.dataframe(edges, use_container_width=True, hide_index=True)
+            df_edges = pd.DataFrame(edges)
+            
+            # ELIMINAR LA COLUMNA reason EN EL LINEAGE SI EXISTE
+            df_edges = df_edges.drop(columns=["reason"], errors="ignore")
+            
+            st.dataframe(df_edges, use_container_width=True, hide_index=True)
         else:
             st.info("No se detectaron relaciones.")
 
@@ -515,9 +519,8 @@ elif page == "Migracion":
 
             df_migration = pd.DataFrame(physical_tables)
 
-            # ELIMINAR LA COLUMNA evidence_path AQUÍ TAMBIÉN
-            if "evidence_path" in df_migration.columns:
-                df_migration = df_migration.drop(columns=["evidence_path"])
+            # ELIMINAR LAS COLUMNAS evidence_path Y reason AQUÍ TAMBIÉN
+            df_migration = df_migration.drop(columns=["evidence_path", "reason"], errors="ignore")
 
             st.dataframe(df_migration, use_container_width=True, hide_index=True)
 
