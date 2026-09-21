@@ -10,7 +10,7 @@ from src.microstrategy_lineage.migration import build_migration_summary
 DATASET = "data/Analisis de objetos_Sistemas y Operaciones.csv"
 
 # Actualizado al nombre y GUID que validamos previamente
-OBJECT_NAME = "TLP509 RASTREO RECON"
+OBJECT_NAME = "% Cartera o D.Negocio Rojo"
 
 EXPECTED_GUID = "CBC58B2044FF5176F23BD4AB57791102"
 

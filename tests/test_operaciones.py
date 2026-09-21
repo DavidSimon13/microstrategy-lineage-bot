@@ -10,7 +10,7 @@ from src.microstrategy_lineage.migration import build_migration_summary
 DATASET = "data/Analisis de objetos_Operaciones.csv"
 
 # Este GUID corresponde a "RPT - Acumulado Diario"
-OBJECT_GUID = "B3DE139D4A1C28653B18FFA8DED6A6F2"
+OBJECT_GUID = "1848424B4AFEF42F597C0481568A9131"
 
 
 class TestOperacionesLineage(unittest.TestCase):
