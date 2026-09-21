@@ -26,9 +26,11 @@ from src.microstrategy_lineage.diagnostics import (
 # CONFIGURACION
 # ============================================================
 
+REPO_ROOT = Path(__file__).resolve().parent
+
 APP_NAME = "Maya"
 APP_SUBTITLE = "Linaje y Mapeo de Activos para la Migracion BI"
-LOGO_PATH = Path("assets/Maya.jpg")
+LOGO_PATH = REPO_ROOT / "assets" / "Maya.jpg"
 
 CHATGPT_URL = "https://chatgpt.com/share/e/6aa065e7-6ba8-8016-8fca-a76a5a4e65e8"
 
@@ -37,13 +39,13 @@ CHATGPT_URL = "https://chatgpt.com/share/e/6aa065e7-6ba8-8016-8fca-a76a5a4e65e8"
 # ============================================================
 
 DATASETS = {
-    "Operaciones": Path("data/Analisis de objetos_Operaciones.csv"),
-    "Sistemas y Operaciones": Path("data/Analisis de objetos_Sistemas y Operaciones.csv"),
-    "CIB": Path("data/Analisis de objetos_CIB.csv"),
-    "Datamart Auditoria": Path("data/Analisis de objetos_Datamart Auditoria.csv"),
-    "Banca Comercial": Path("data/Analisis de objetos_Banca Comercial.csv"), 
-    "IES 2": Path("data/Analisis de objetos_IES2.csv"),
-    "Pricing": Path("data/Analisis de objetos_Pricing.csv"),
+    "Operaciones": REPO_ROOT / "data" / "Analisis de objetos_Operaciones.csv",
+    "Sistemas y Operaciones": REPO_ROOT / "data" / "Analisis de objetos_Sistemas y Operaciones.csv",
+    "CIB": REPO_ROOT / "data" / "Analisis de objetos_CIB.csv",
+    "Datamart Auditoria": REPO_ROOT / "data" / "Analisis de objetos_Datamart Auditoria.csv",
+    "Banca Comercial": REPO_ROOT / "data" / "Analisis de objetos_Banca Comercial.csv",
+    "IES 2": REPO_ROOT / "data" / "Analisis de objetos_IES2.csv",
+    "Pricing": REPO_ROOT / "data" / "Analisis de objetos_Pricing.csv",
 }
 
 # ============================================================
@@ -117,7 +119,7 @@ st.markdown(
         font-weight: 700;
         margin-bottom: 10px;
     }
-    
+
     /* Diseño general para los botones principales (pantalla central) */
     div.stButton > button {
         width: 100%;
@@ -186,6 +188,7 @@ st.markdown(
 def load_dataset(dataset_path):
     return load_platform_analytics(str(dataset_path))
 
+
 def analyze_object(dataset_path, object_query):
     rows = load_dataset(dataset_path)
     obj = resolve_object(rows, object_query)
@@ -193,7 +196,7 @@ def analyze_object(dataset_path, object_query):
     classified = classify_lineage(lineage)
     migration_summary = build_migration_summary(classified)
     diagnostics = build_diagnostics(classified, migration_summary)
-    
+
     return {
         "object": obj,
         "classified": classified,
@@ -201,19 +204,25 @@ def analyze_object(dataset_path, object_query):
         "diagnostics": diagnostics,
     }
 
+
 def show_logo(width=120):
     if LOGO_PATH.exists():
         st.image(str(LOGO_PATH), width=width)
     else:
         st.markdown("## 🤖")
 
+
 def navigate(page_name):
     st.session_state.page = page_name
 
+
 def status_icon(status):
-    if status == "SUCCESS": return "✅"
-    if status == "SUCCESS_WITH_WARNINGS": return "⚠️"
-    if status == "NEEDS_INPUT": return "🟡"
+    if status == "SUCCESS":
+        return "✅"
+    if status == "SUCCESS_WITH_WARNINGS":
+        return "⚠️"
+    if status == "NEEDS_INPUT":
+        return "🟡"
     return "❌"
 
 # ============================================================
@@ -287,9 +296,12 @@ if page == "Inicio":
     )
 
     c1, c2, c3 = st.columns(3)
-    with c1: st.metric("Arquitectura", "N6 → N1")
-    with c2: st.metric("Identidad", "GUID")
-    with c3: st.metric("Destino", "AWS")
+    with c1:
+        st.metric("Arquitectura", "N6 → N1")
+    with c2:
+        st.metric("Identidad", "GUID")
+    with c3:
+        st.metric("Destino", "AWS")
 
     st.markdown("---")
     st.markdown("### ⚡ Acciones rapidas")
@@ -332,7 +344,7 @@ elif page == "Analisis":
                 try:
                     with st.spinner("Analizando lineage..."):
                         result = analyze_object(dataset_path, object_query)
-                    
+
                     st.session_state.last_result = result
                     st.session_state.last_project = project
                     st.session_state.last_query = object_query
@@ -375,7 +387,7 @@ elif page == "Analisis":
         c1.metric("Physical Tables", migration.get("physical_table_count", 0))
         c2.metric("MIGRATE", migration.get("migrate_count", 0))
         c3.metric("VALIDATE SQL", migration.get("validate_sql_count", 0))
-        
+
         status = diagnostics.get("status", "UNKNOWN")
         c4.metric("Status", f"{status_icon(status)} {status}")
 
@@ -498,13 +510,13 @@ elif page == "Migracion":
 
         if physical_tables:
             st.markdown("### Tablas")
-            
+
             df_migration = pd.DataFrame(physical_tables)
-            
+
             # ELIMINAR LA COLUMNA evidence_path AQUÍ TAMBIÉN
             if "evidence_path" in df_migration.columns:
                 df_migration = df_migration.drop(columns=["evidence_path"])
-                
+
             st.dataframe(df_migration, use_container_width=True, hide_index=True)
 
 # ============================================================
