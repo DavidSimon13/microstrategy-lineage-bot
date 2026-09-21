@@ -1,2 +1,5 @@
 PyYAML>=6.0,<7.0
 streamlit
+pandas
+openpyxl
+xlrd
