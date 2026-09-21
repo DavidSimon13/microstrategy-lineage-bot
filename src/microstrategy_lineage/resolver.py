@@ -57,7 +57,6 @@ def _normalize_text(value):
         return ""
 
     value = str(value).strip()
-
     value = value.casefold()
 
     normalized = unicodedata.normalize(
@@ -122,6 +121,7 @@ def build_object_index(rows):
                 "object_guid",
                 ""
             )
+            or row.get("object_guid_", "")
             or ""
         ).strip()
 
@@ -137,6 +137,7 @@ def build_object_index(rows):
                     "object_name",
                     ""
                 )
+                or row.get("name", "")
                 or ""
             )
 
@@ -145,6 +146,8 @@ def build_object_index(rows):
                     "object_type",
                     ""
                 )
+                or row.get("object_type_desc", "")
+                or row.get("type", "")
                 or ""
             )
 
@@ -153,6 +156,7 @@ def build_object_index(rows):
                     "object_location",
                     ""
                 )
+                or row.get("location", "")
                 or ""
             )
 
@@ -191,6 +195,7 @@ def build_object_index(rows):
                 "component_guid",
                 ""
             )
+            or row.get("component_guid_", "")
             or ""
         ).strip()
 
@@ -206,6 +211,7 @@ def build_object_index(rows):
                     "component_name",
                     ""
                 )
+                or row.get("component_object_name", "")
                 or ""
             )
 
@@ -214,6 +220,8 @@ def build_object_index(rows):
                     "component_type",
                     ""
                 )
+                or row.get("component_type_desc", "")
+                or row.get("component_object_type", "")
                 or ""
             )
 
@@ -376,11 +384,11 @@ def resolve_object(
     1. GUID exacto.
     2. Nombre exacto normalizado.
     3. Si existen duplicados:
-       priorizar un único objeto público.
+        priorizar un único objeto público.
     4. Si siguen existiendo varios:
-       NEEDS_INPUT.
+        NEEDS_INPUT.
     5. Si no existe:
-       ofrecer sugerencias sin adivinar.
+        ofrecer sugerencias sin adivinar.
     """
 
     if query is None:
@@ -475,10 +483,6 @@ def resolve_object(
             )
         ]
 
-        # ---------------------------------
-        # ÚNICO OBJETO PÚBLICO
-        # ---------------------------------
-
         if len(
             public_matches
         ) == 1:
@@ -512,10 +516,6 @@ def resolve_object(
 
             return selected
 
-        # ---------------------------------
-        # SIGUE EXISTIENDO AMBIGÜEDAD
-        # ---------------------------------
-
         details = [
             _format_candidate(
                 obj
@@ -539,10 +539,6 @@ def resolve_object(
         raise AmbiguousObjectError(
             message
         )
-
-    # =====================================
-    # 5. OBJETO NO ENCONTRADO
-    # =====================================
 
     suggestions = (
         _build_suggestions(
@@ -597,3 +593,4 @@ def resolve_object(
     raise ObjectNotFoundError(
         message
     )
+

@@ -1,8 +1,50 @@
-from pathlib import Path
-import pandas as pd
-import zipfile
 import io
 import os
+import re
+import zipfile
+from pathlib import Path
+
+import pandas as pd
+
+
+def _clean_text(value):
+    if value is None:
+        return ""
+    value = str(value)
+    value = value.replace("\ufeff", "")
+    value = value.replace("\x00", "")
+    value = value.replace("\u200b", "")
+    value = value.strip()
+    return value
+
+
+def _normalize_column_name(column_name):
+    normalized = _clean_text(column_name)
+    normalized = normalized.lower()
+    normalized = normalized.replace("-", " ")
+    normalized = normalized.replace("/", " ")
+    normalized = normalized.replace(".", " ")
+    normalized = re.sub(r"[^a-z0-9]+", " ", normalized)
+    normalized = normalized.strip()
+    normalized = normalized.replace(" ", "_")
+
+    alias_map = {
+        "object_name": "object_name",
+        "object_guid": "object_guid",
+        "object_location": "object_location",
+        "object_type": "object_type",
+        "object_type_desc": "object_type",
+        "component_object_name": "component_name",
+        "component_name": "component_name",
+        "component_object_guid": "component_guid",
+        "component_guid": "component_guid",
+        "component_object_type": "component_type",
+        "component_type": "component_type",
+        "component_object_type_desc": "component_type",
+        "component_type_desc": "component_type",
+    }
+
+    return alias_map.get(normalized, normalized)
 
 
 def _resolve_input_path(file_path):
@@ -27,7 +69,7 @@ def load_platform_analytics(file_path):
     path_str = _resolve_input_path(file_path)
 
     def read_file(file_obj):
-        # 1. Intento directo y simple (Ideal para los tests de GitHub y CSVs sanos)
+        # 1. Intento directo y simple (ideal para CSVs sanos)
         try:
             if hasattr(file_obj, 'seek'):
                 file_obj.seek(0)
@@ -37,17 +79,22 @@ def load_platform_analytics(file_path):
         except Exception:
             pass
 
-        # 2. Intento robusto (Solo si falla el primero, ideal para reportes pesados reales)
-        encodings = ['utf-8-sig', 'utf-8', 'latin1', 'cp1252', 'utf-16']
-        separators = [',', '\t', ';', '|']
+        # 2. Intento robusto con encodings y separadores
+        encodings = ['utf-16', 'utf-8-sig', 'utf-8', 'latin1', 'cp1252']
+        separators = [None, ',', '\t', ';', '|']
 
         for enc in encodings:
             for sep in separators:
                 try:
                     if hasattr(file_obj, 'seek'):
                         file_obj.seek(0)
-                    df = pd.read_csv(file_obj, encoding=enc, sep=sep, dtype=str, on_bad_lines='skip')
-                    if len(df.columns) > 2:
+                    kwargs = {'encoding': enc, 'dtype': str, 'on_bad_lines': 'skip'}
+                    if sep is not None:
+                        kwargs['sep'] = sep
+                    else:
+                        kwargs['engine'] = 'python'
+                    df = pd.read_csv(file_obj, **kwargs)
+                    if len(df.columns) > 1:
                         return df
                 except Exception:
                     continue
@@ -77,37 +124,27 @@ def load_platform_analytics(file_path):
     if df is None or df.empty:
         return []
 
-    # ---------------------------------------------------------
-    # LIMPIEZA
-    # ---------------------------------------------------------
-    def clean_col(c):
-        return str(c).replace('\ufeff', '').strip().replace('"', '')
+    # Normalización de columnas para los CSV de MicroStrategy
+    df.columns = [_normalize_column_name(col) for col in df.columns]
 
-    current_cols = [clean_col(c) for c in df.columns]
-
-    # Alinear cabeceras si la tabla viene movida (Como el Modelo BBVA)
-    if 'Object Name' not in current_cols:
+    # Si el CSV viene con cabecera desplazada, se corrige
+    required = {'object_name', 'object_guid', 'object_location', 'object_type'}
+    if not required.issubset(set(df.columns)):
         for i in range(min(10, len(df))):
-            row_vals = [clean_col(val) for val in df.iloc[i].values]
-            if 'Object Name' in row_vals:
-                df.columns = row_vals
-                df = df.iloc[i+1:].reset_index(drop=True)
+            row_vals = [_clean_text(val) for val in df.iloc[i].values]
+            if any('object name' in str(val).lower() for val in row_vals):
+                df.columns = [_normalize_column_name(val) for val in row_vals]
+                df = df.iloc[i + 1:].reset_index(drop=True)
                 break
-        else:
-            df.columns = current_cols
-    else:
-        df.columns = current_cols
 
-    # Eliminar columnas vacías y rellenar nulos
+    # Limpieza final
     df = df.loc[:, ~df.columns.isna()]
     df = df.loc[:, [c for c in df.columns if str(c).strip().lower() not in ('', 'nan')]]
     df = df.fillna("")
 
-    # --- NUEVAS LÍNEAS PARA LIMPIAR ESPACIOS INVISIBLES ---
-    cols_to_clean = ['Object Name', 'Object GUID', 'Component Object Name', 'Component Object GUID']
-    for c in cols_to_clean:
-        if c in df.columns:
-            df[c] = df[c].astype(str).str.strip()
-    # ------------------------------------------------------
+    for col in list(df.columns):
+        if col in ('object_name', 'object_guid', 'component_name', 'component_guid', 'object_location', 'object_type', 'component_type'):
+            df[col] = df[col].astype(str).apply(_clean_text)
 
-    return df.to_dict(orient="records")
+    return df.to_dict(orient='records')
+
