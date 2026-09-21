@@ -46,6 +46,8 @@ DATASETS = {
     "Banca Comercial": REPO_ROOT / "data" / "Analisis de objetos_Banca Comercial.csv",
     "IES 2": REPO_ROOT / "data" / "Analisis de objetos_IES2.csv",
     "Pricing": REPO_ROOT / "data" / "Analisis de objetos_Pricing.csv",
+    "Modelo BBVA": REPO_ROOT / "data" / "Analisisdeobjetos_modeloBBVA.xlsx",
+    "Reportes regulatorios": REPO_ROOT / "data" / "Analisisdeobjetos_reporteregulatorios2.xlsx",
 }
 
 # ============================================================
