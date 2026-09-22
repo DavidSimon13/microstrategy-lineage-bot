@@ -242,7 +242,7 @@ with st.sidebar:
         navigate("Inicio")
 
     st.divider()
-    st.caption("Maya | Metadata & Lineage")
+    st.caption("Maya | Mapping & Analytics")
 
 # ============================================================
 # CONTENIDO PRINCIPAL
